@@ -9,7 +9,8 @@ using DisableSogou.BLL;
 namespace DisableSogou
 {
 	public partial class MainForm : Form
-	{		
+	{
+		public bool Silent { get; set; }
 		ConfigData m_config = new ConfigData();
 		AdLocker m_locker = new AdLocker();
 		bool m_optionOpened = false;
@@ -24,10 +25,20 @@ namespace DisableSogou
 			this.Visible = false;
 			this.ShowInTaskbar = false;
 
+			m_config.Load();
 			if (m_config.Valid)
 			{
+				notifyIcon1.Visible = !Silent;
 				m_locker.SogouFolder = m_config.SogouFolder;
-				m_locker.Lock();
+
+				try
+				{
+					m_locker.Lock(true);
+				}
+				catch (Exception ex)
+				{
+					MessageBox.Show(this, ex.Message, ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+				}
 			}
 			else
 			{
@@ -35,9 +46,16 @@ namespace DisableSogou
 			}
 		}
 
-		private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
+		private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
 		{
-			m_locker.Unlock(true);
+			try
+			{
+				m_locker.Unlock(true);
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(this, ex.Message, ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+			}
 		}
 
 		private void notifyIcon1_DoubleClick(object sender, EventArgs e)
@@ -57,6 +75,8 @@ namespace DisableSogou
 		
 		void ShowOption()
 		{
+			Win32API.Window.SetForegroundWindow(Handle);
+
 			if (m_optionOpened)
 			{
 				return;
@@ -68,9 +88,17 @@ namespace DisableSogou
 
 			if (form.ShowDialog(this) == DialogResult.OK)
 			{
-				m_locker.SogouFolder = m_config.SogouFolder;
-				m_locker.Unlock(false);
-				m_locker.Lock();
+				notifyIcon1.Visible = !m_config.Silent;
+				m_locker.SogouFolder = m_config.SogouFolder;				
+
+				try
+				{
+					m_locker.Lock(true);
+				}
+				catch (Exception ex)
+				{
+					MessageBox.Show(this, ex.Message, ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+				}
 			}
 
 			m_optionOpened = false;

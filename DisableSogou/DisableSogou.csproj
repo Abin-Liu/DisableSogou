@@ -51,6 +51,7 @@
     <Compile Include="BLL\ConfigData.cs" />
     <Compile Include="BLL\FolderHelper.cs" />
     <Compile Include="Libs\RegistryHelper.cs" />
+    <Compile Include="Libs\Win32API.Window.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>

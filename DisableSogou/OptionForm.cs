@@ -23,6 +23,7 @@ namespace DisableSogou
 		{
 			txtPath.Text = Config.SogouFolder;
 			chkAutorun.Checked = Config.Autorun;
+			chkSilent.Checked = Config.Silent;
 		}
 
 		private void btnBrowse_Click(object sender, EventArgs e)
@@ -42,7 +43,7 @@ namespace DisableSogou
 			}			
 
 			txtPath.Text = dlg.SelectedPath;
-		}
+		}		
 
 		private void btnOK_Click(object sender, EventArgs e)
 		{
@@ -50,10 +51,13 @@ namespace DisableSogou
 			{
 				MessageBox.Show(this, "请正确选择搜狗输入法安装目录（SogouPY.ime所在目录）。");
 				return;
-			}
+			}			
 
 			Config.SogouFolder = txtPath.Text;
 			Config.Autorun = chkAutorun.Checked;
+			Config.Silent = chkSilent.Checked;
+			Config.Save();
+
 			DialogResult = DialogResult.OK;
 			Close();
 		}
@@ -62,6 +66,19 @@ namespace DisableSogou
 		{
 			DialogResult = DialogResult.Cancel;
 			Close();
+		}
+
+		private void chkSilent_Click(object sender, EventArgs e)
+		{
+			if (!chkSilent.Checked)
+			{
+				return;
+			}
+
+			if (MessageBox.Show(this, "勾选此项后程序图标会隐藏，只有通过任务管理器才能终止本程序进程，确定吗？", ProductName, MessageBoxButtons.OKCancel, MessageBoxIcon.Question) != DialogResult.OK)
+			{
+				chkSilent.Checked = false;
+			}
 		}
 	}
 }

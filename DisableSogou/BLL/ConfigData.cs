@@ -7,83 +7,44 @@ namespace DisableSogou.BLL
 	{
 		public const string ProductName = "DisableSogou";
 
-		public string SogouFolder
-		{
-			get
-			{
-				return m_sogouFolder;
-			}
+		public string SogouFolder { get; set; }
+		public bool Autorun { get; set; }
+		public bool Silent { get; set; }
+		public bool Valid => FolderHelper.IsImeFolder(SogouFolder);		
 
-			set
-			{
-				if (string.Compare(m_sogouFolder, value) == 0)
-				{
-					return;
-				}
-
-				m_sogouFolder = value;
-
-				RegistryHelper reg = new RegistryHelper();
-				reg.Open("Abin", ProductName, true);
-				reg.WriteString("Sogou Directory", m_sogouFolder);
-				reg.Close();
-			}
-		}
-
-		public bool Autorun
-		{
-			get
-			{
-				return m_autorun;
-			}
-
-			set
-			{
-				if (m_autorun == value)
-				{
-					return;
-				}
-
-				m_autorun = value;
-				if (m_autorun)
-				{
-					RegistryHelper.AddAutoStartApp(ProductName, System.Windows.Forms.Application.ExecutablePath);
-				}
-				else
-				{
-					RegistryHelper.RemoveAutoStartApp(ProductName);
-				}
-			}
-		}
-
-		public bool Valid => FolderHelper.IsImeFolder(m_sogouFolder);
-
-		private string m_sogouFolder;
-		private bool m_autorun;
-
-		public ConfigData()
+		public void Load()
 		{
 			RegistryHelper reg = new RegistryHelper();
 			reg.Open("Abin", ProductName);
-			m_sogouFolder = reg.ReadString("Sogou Directory");
-			reg.Close();			
+			SogouFolder = reg.ReadString("Sogou Directory");
+			Silent = reg.ReadBool("Silent");
+			reg.Close();
 
-			m_autorun = RegistryHelper.CheckAutoStartApp(ProductName) != null;
-			CheckFolder();
+			Autorun = RegistryHelper.CheckAutoStartApp(ProductName) != null;
+
+			if (!Valid)
+			{
+				SogouFolder = FolderHelper.GetImeFolder() ?? "";
+			}
 		}
-		
-		private void CheckFolder()
+
+		public void Save()
 		{
-			if (Valid)
-			{
-				return;
-			}
+			RegistryHelper reg = new RegistryHelper();
+			reg.Open("Abin", ProductName, true);
+			reg.WriteString("Sogou Directory", SogouFolder);
+			reg.WriteBool("Silent", Silent);
+			reg.Close();
 
-			string folder = FolderHelper.GetImeFolder() ?? "";
-			if (folder != null)
+			if (Autorun)
 			{
-				SogouFolder = folder;
+				string param = Silent ? "-silent" : null;
+				RegistryHelper.AddAutoStartApp(ProductName, System.Windows.Forms.Application.ExecutablePath, param);
 			}
-		}
+			else
+			{
+				RegistryHelper.RemoveAutoStartApp(ProductName);
+			}
+		}		
 	}
 }

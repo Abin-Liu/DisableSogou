@@ -16,10 +16,15 @@ namespace DisableSogou.BLL
 
 		public string SogouFolder { get; set; }
 
-		public void Lock()
+		public void Lock(bool backup)
 		{
 			foreach (ADData data in DataList)
 			{
+				if (backup)
+				{
+					data.Backup(SogouFolder);
+				}
+
 				data.Lock(SogouFolder);
 			}
 		}
@@ -28,7 +33,7 @@ namespace DisableSogou.BLL
 		{
 			foreach (ADData data in DataList)
 			{
-				data.Unlock(SogouFolder);
+				data.Unlock();
 				
 				if (restore)
 				{
@@ -53,14 +58,12 @@ namespace DisableSogou.BLL
 
 		public void Lock(string sogouFolder)
 		{
-			Unlock(sogouFolder);
+			Unlock();
 
 			if (!KillProcessByName(ProcessName))
 			{
 				throw new Exception("无法杀死进程：" + ProcessName);
 			}			
-
-			Backup(sogouFolder);
 
 			string filePath = sogouFolder + '\\' + FileName;
 
@@ -80,11 +83,11 @@ namespace DisableSogou.BLL
 			catch
 			{
 				m_fs = null;
-				throw new Exception("无法占用文件：" + filePath);
+				throw new Exception("无法锁定文件：" + filePath);
 			}
 		}
 
-		public void Unlock(string sogouFolder)
+		public void Unlock()
 		{
 			if (m_fs == null)
 			{
@@ -102,7 +105,7 @@ namespace DisableSogou.BLL
 			m_fs = null;			
 		}
 
-		private void Backup(string sogouFolder)
+		public void Backup(string sogouFolder)
 		{
 			string filePath = sogouFolder + '\\' + FileName;
 			if (!File.Exists(filePath))
